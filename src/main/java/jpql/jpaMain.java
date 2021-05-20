@@ -18,22 +18,12 @@ public class jpaMain {
 
         try {
 
-            Team team = new Team();
-            team.setTeamName("team1");
-            em.persist(team);
-
             Member member = new Member();
             member.setUsername("Admin");
-            member.setAge(18);
-            member.changeTeam(team);
-            member.setType(MemberType.ADMIN);
             em.persist(member);
 
             Member member2 = new Member();
-            member.setUsername("user");
-            member.setAge(18);
-            member.changeTeam(team);
-            member.setType(MemberType.USER);
+            member2.setUsername("User");
             em.persist(member2);
 
             em.flush();
@@ -258,10 +248,10 @@ public class jpaMain {
 
     /**
      * Read all members with User custom defined functions.
-     * <p>First, need dialect setting which database.</p>
+     * <p>First, need jpql.dialect setting which database.</p>
      */
     private static void getMembersWithCustomFunction(EntityManager em) {
-        // note. if
+        // note. Usage user custom defined function.
         String query = "select function('group_concat', m.username) from Member m ";
 //        query = "select group_concat(m.username) from Member m"; // note. Same above query.
         List<String> result = em.createQuery(query, String.class)

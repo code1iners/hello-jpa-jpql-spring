@@ -10,7 +10,7 @@
             <property name="javax.persistence.jdbc.user" value="sa"/>
             <property name="javax.persistence.jdbc.password" value="ahffkdy"/>
             <property name="javax.persistence.jdbc.url" value="jdbc:h2:tcp://localhost/~/jpql"/>
-<!--            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>-->
+<!--            <property name="hibernate.jpql.dialect" value="org.hibernate.jpql.dialect.H2Dialect"/>-->
             <property name="hibernate.dialect" value="jpql.dialect.MyH2Dialect"/>
 
             <!-- 옵션 -->
