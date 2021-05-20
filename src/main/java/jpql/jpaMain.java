@@ -15,20 +15,23 @@ public class jpaMain {
         tx.begin();
 
         try {
-            Member member = new Member();
-            member.setUsername("member1");
-            member.setAge(19);
-            em.persist(member);
+            for (int i=0; i<100; i++) {
+                Member member = new Member();
+                member.setUsername("member" + i);
+                member.setAge(i);
+                em.persist(member);
+            }
 
             em.flush();
             em.clear();
 
             Member foundMember = getMember(em);
             List<Member> foundMembers = getMembers(em);
-
             List<MemberDTO> foundMembers2 = getMembersWithDTO(em);
+            List<Member> foundPagedMembers = getMembersWithPaging(em);
 
-            for (MemberDTO m : foundMembers2) {
+
+            for (Member m : foundPagedMembers) {
                 System.out.println("member = " + m);
             }
 
@@ -46,6 +49,9 @@ public class jpaMain {
         emf.close();
     }
 
+    /**
+     * Read just one member with parameter.
+     */
     private static Member getMember(EntityManager em) {
         return em
                 .createQuery("select m from Member m where m.username = :username", Member.class)
@@ -53,14 +59,30 @@ public class jpaMain {
                 .getSingleResult();
     }
 
+    /**
+     * Read all members simply.
+     */
     private static List<Member> getMembers(EntityManager em) {
         return em
                 .createQuery("select m from Member m", Member.class)
                 .getResultList();
     }
 
+    /**
+     * Read all members with domain DTO.
+     */
     private static List<MemberDTO> getMembersWithDTO(EntityManager em) {
         return em.createQuery("select new jpql.domain.MemberDTO(m.username, m.age) from Member m", MemberDTO.class)
+                .getResultList();
+    }
+
+    /**
+     * Read all members with paging and sort.
+     */
+    private static List<Member> getMembersWithPaging(EntityManager em) {
+        return em.createQuery("select m from Member m order by m.age ", Member.class)
+                .setFirstResult(1)
+                .setMaxResults(10)
                 .getResultList();
     }
 
