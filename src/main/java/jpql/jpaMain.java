@@ -2,6 +2,7 @@ package jpql;
 
 import jpql.domain.Member;
 import jpql.domain.MemberDTO;
+import jpql.domain.MemberType;
 import jpql.domain.Team;
 
 import javax.persistence.*;
@@ -25,6 +26,7 @@ public class jpaMain {
             member.setUsername("member1");
             member.setAge(18);
             member.changeTeam(team);
+            member.setType(MemberType.ADMIN);
             em.persist(member);
 
             em.flush();
@@ -35,11 +37,15 @@ public class jpaMain {
 //            List<MemberDTO> foundMembers2 = getMembersWithDTO(em);
 //            List<Member> foundPagedMembers = getMembersWithPaging(em);
 //            List<Member> result = getMembersWithJoins(em);
+//            List<Member> result = getMembersWithSubQuery(em);
 
-            List<Member> result = getMembersWithSubQuery(em);
+            List<Object[]> result = getMembersWithTypes(em);
 
-            for (Member m : result) {
-                System.out.println("member = " + m);
+
+            for (Object[] m : result) {
+                System.out.println("member = " + m[0]);
+                System.out.println("member = " + m[1]);
+                System.out.println("member = " + m[2]);
             }
 
             tx.commit();
@@ -133,6 +139,20 @@ public class jpaMain {
         TypedQuery<Member> query = em.createQuery(subQuery, Member.class);
 
         return query.getResultList();
+    }
+
+    /**
+     * Read all members with variety types.
+     * <p>1. String.</p>
+     * <p>2. Boolean.</p>
+     * <p>3. Number. - 10L(Long) 10D(Double) 10F(Float)</p>
+     */
+    private static List<Object[]> getMembersWithTypes(EntityManager em) {
+        String query = "select m.username, 'HELLO', TRUE from Member m ";
+        query += "where m.type = :userType";
+        Query resultQuery = em.createQuery(query)
+                .setParameter("userType", MemberType.ADMIN);
+        return resultQuery.getResultList();
     }
 
 }
