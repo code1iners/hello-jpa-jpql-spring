@@ -2,6 +2,7 @@ package jpql;
 
 import jpql.domain.Member;
 import jpql.domain.MemberDTO;
+import jpql.domain.Team;
 
 import javax.persistence.*;
 import java.util.List;
@@ -15,28 +16,30 @@ public class jpaMain {
         tx.begin();
 
         try {
-            for (int i=0; i<100; i++) {
-                Member member = new Member();
-                member.setUsername("member" + i);
-                member.setAge(i);
-                em.persist(member);
-            }
+
+            Team team = new Team();
+            team.setTeamName("team1");
+            em.persist(team);
+
+            Member member = new Member();
+            member.setUsername("member1");
+            member.setAge(18);
+            member.changeTeam(team);
+            em.persist(member);
 
             em.flush();
             em.clear();
 
-            Member foundMember = getMember(em);
-            List<Member> foundMembers = getMembers(em);
-            List<MemberDTO> foundMembers2 = getMembersWithDTO(em);
-            List<Member> foundPagedMembers = getMembersWithPaging(em);
+//            Member foundMember = getMember(em);
+//            List<Member> foundMembers = getMembers(em);
+//            List<MemberDTO> foundMembers2 = getMembersWithDTO(em);
+//            List<Member> foundPagedMembers = getMembersWithPaging(em);
 
+            List<Member> result = getMembersWithJoins(em);
 
-            for (Member m : foundPagedMembers) {
+            for (Member m : result) {
                 System.out.println("member = " + m);
             }
-
-            Member selectedMember = foundMembers.get(0);
-            selectedMember.setAge(10);
 
             tx.commit();
         } catch (Exception e) {
@@ -84,6 +87,36 @@ public class jpaMain {
                 .setFirstResult(1)
                 .setMaxResults(10)
                 .getResultList();
+    }
+
+    /**
+     * Read all members with joins.
+     * <p>1. Inner join.</p>
+     * <p>2. Outer join.</p>
+     * <p>3. Theta join.</p>
+     * <p>3. Relational/Non Relational join.</p>
+     */
+    private static List<Member> getMembersWithJoins(EntityManager em) {
+        // note. Inner join.
+        String query = "select m from Member m inner join m.team t";
+
+        // note. Outer join (left).
+        query = "select m from Member m left join m.team t";
+
+        // note. Theta join.
+        query = "select m from Member m, Team t where m.username = t.teamName";
+
+        // note. Relational join.
+        query = "select m from Member m left join m.team t on t.teamName = 'team1'";
+
+        // note. Non relational join.
+        query = "select m from Member m left join Team t on m.username = t.teamName";
+
+        List<Member> result = em.createQuery(query, Member.class)
+                .getResultList();
+
+        System.out.println("size: " + result.size());
+        return result;
     }
 
 }
