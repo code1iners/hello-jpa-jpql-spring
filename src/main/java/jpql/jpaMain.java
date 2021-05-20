@@ -29,6 +29,13 @@ public class jpaMain {
             member.setType(MemberType.ADMIN);
             em.persist(member);
 
+            Member member2 = new Member();
+            member.setUsername("user");
+            member.setAge(18);
+            member.changeTeam(team);
+            member.setType(MemberType.USER);
+            em.persist(member2);
+
             em.flush();
             em.clear();
 
@@ -41,7 +48,9 @@ public class jpaMain {
 //            List<Object[]> result = getMembersWithTypes(em);
 //            List<String> result = getMembersWithConditions(em);
 //            List<String> result = getMembersWithCoalesce(em);
-            List<String> result = getMembersWithNullIf(em);
+//            List<String> result = getMembersWithNullIf(em);
+//            getMembersWithBasicFunction(em);
+            getMembersWithCustomFunction(em);
 
             tx.commit();
         } catch (Exception e) {
@@ -209,5 +218,57 @@ public class jpaMain {
         }
 
         return result;
+    }
+
+    /**
+     * Read all members with JPQL basic functions.
+     * <p>CONCAT.</p>
+     * <p>SUBSTRING.</p>
+     * <p>TRIM.</p>
+     * <p>LOWER, UPPER.</p>
+     * <p>LENGTH.</p>
+     * <p>LOCATE.</p>
+     * <p>ABS, SQRT, MOD.</p>
+     * <p>SIZE, INDEX(for JPA).</p>
+     */
+    private static void getMembersWithBasicFunction(EntityManager em) {
+        // note. Concat. (return type String)
+        String query = "select concat('a', 'b') from Member m ";
+//        query = "select 'a' || 'b' from Member m "; // note. Same concat('a', 'b')
+
+        // note. Substring. (return type String)
+        query = "select substring(m.username, 2, 3) from Member m ";
+
+        // note. Locate. (return type Integer)
+        query = "select locate('de', 'abcdef') from Member m "; // note. return 4
+
+        // note. Size(return type Integer)
+        query = "select size(t.members) from Team t ";
+
+        // note. Index (Not recommended)
+//        query = "select index(t.members) From Team t ";
+
+        List<Integer> result = em.createQuery(query, Integer.class)
+                .getResultList();
+
+        for (Integer s : result) {
+            System.out.println("s = " + s);
+        }
+    }
+
+    /**
+     * Read all members with User custom defined functions.
+     * <p>First, need dialect setting which database.</p>
+     */
+    private static void getMembersWithCustomFunction(EntityManager em) {
+        // note. if
+        String query = "select function('group_concat', m.username) from Member m ";
+//        query = "select group_concat(m.username) from Member m"; // note. Same above query.
+        List<String> result = em.createQuery(query, String.class)
+                .getResultList();
+
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
     }
 }
