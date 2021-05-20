@@ -23,7 +23,7 @@ public class jpaMain {
             em.persist(team);
 
             Member member = new Member();
-            member.setUsername("member1");
+            member.setUsername("Admin");
             member.setAge(18);
             member.changeTeam(team);
             member.setType(MemberType.ADMIN);
@@ -32,21 +32,16 @@ public class jpaMain {
             em.flush();
             em.clear();
 
-//            Member foundMember = getMember(em);
-//            List<Member> foundMembers = getMembers(em);
-//            List<MemberDTO> foundMembers2 = getMembersWithDTO(em);
-//            List<Member> foundPagedMembers = getMembersWithPaging(em);
+//            Member result = getMember(em);
+//            List<Member> result = getMembers(em);
+//            List<MemberDTO> result = getMembersWithDTO(em);
+//            List<Member> result = getMembersWithPaging(em);
 //            List<Member> result = getMembersWithJoins(em);
 //            List<Member> result = getMembersWithSubQuery(em);
-
-            List<Object[]> result = getMembersWithTypes(em);
-
-
-            for (Object[] m : result) {
-                System.out.println("member = " + m[0]);
-                System.out.println("member = " + m[1]);
-                System.out.println("member = " + m[2]);
-            }
+//            List<Object[]> result = getMembersWithTypes(em);
+//            List<String> result = getMembersWithConditions(em);
+//            List<String> result = getMembersWithCoalesce(em);
+            List<String> result = getMembersWithNullIf(em);
 
             tx.commit();
         } catch (Exception e) {
@@ -155,4 +150,64 @@ public class jpaMain {
         return resultQuery.getResultList();
     }
 
+    /**
+     * Read all members with case.
+     */
+    private static List<String> getMembersWithConditions(EntityManager em) {
+        String query =
+                "select " +
+                        "  case when m.age <= 10 then 'Student fare' " +
+                        "       when m.age >= 60 then 'Senior fare' " +
+                        "       else 'Normal fare' " +
+                        "   end" +
+                        "  from Member m";
+
+        String query2 =
+                "select " +
+                        "  case t.teamName " +
+                        "       when 'team1' then 'Incentive 110%' " +
+                        "       when 'team2' then 'Incentive 120%' " +
+                        "       else 'Incentive 105%' " +
+                        "   end" +
+                        "  from Team t";
+
+        List<String> result = em.createQuery(query2, String.class)
+                .getResultList();
+
+        for (String item : result) {
+            System.out.println("item = " + item);
+        }
+
+        return result;
+    }
+
+    /**
+     * Read all members with Coalesce.
+     * <p>coalesce(param1, param2)</p>
+     * <p>if first param1 is null, then return param2 as value.</p>
+     */
+    private static List<String> getMembersWithCoalesce(EntityManager em) {
+        String query = "select coalesce(m.username, 'Unknown user') from Member m ";
+        List<String> result = em.createQuery(query, String.class).getResultList();
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
+
+        return result;
+    }
+
+    /**
+     * Read all members with null if.
+     * <p>nullif(param1, param2)</p>
+     * <p>if param1 is same with param2 then, return null value as result.</p>
+     */
+    private static List<String> getMembersWithNullIf(EntityManager em) {
+        String query = "select nullif(m.username, 'Admin') from Member m ";
+        List<String> result = em.createQuery(query, String.class).getResultList();
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
+
+        return result;
+    }
 }
