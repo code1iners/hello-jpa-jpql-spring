@@ -34,8 +34,9 @@ public class jpaMain {
 //            List<Member> foundMembers = getMembers(em);
 //            List<MemberDTO> foundMembers2 = getMembersWithDTO(em);
 //            List<Member> foundPagedMembers = getMembersWithPaging(em);
+//            List<Member> result = getMembersWithJoins(em);
 
-            List<Member> result = getMembersWithJoins(em);
+            List<Member> result = getMembersWithSubQuery(em);
 
             for (Member m : result) {
                 System.out.println("member = " + m);
@@ -117,6 +118,21 @@ public class jpaMain {
 
         System.out.println("size: " + result.size());
         return result;
+    }
+
+    /**
+     * Read all members with sub-query.
+     */
+    private static List<Member> getMembersWithSubQuery(EntityManager em) {
+        // note. Sub query;
+        String subQuery = "select m from Member m where m.age > (select avg(m2.age) from Member m2)";
+
+        // note. Scalar query
+        subQuery = "select (select avg(m2.age) from Member m2) from Member m";
+
+        TypedQuery<Member> query = em.createQuery(subQuery, Member.class);
+
+        return query.getResultList();
     }
 
 }
