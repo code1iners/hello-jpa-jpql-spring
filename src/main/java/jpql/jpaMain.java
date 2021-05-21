@@ -9,6 +9,8 @@ import javax.persistence.*;
 import java.util.Collection;
 import java.util.List;
 
+import static jpql.utils.EntityManagerUtils.clearAndPrintLine;
+
 public class jpaMain {
     public static void main(String[] args) {
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
@@ -71,7 +73,7 @@ public class jpaMain {
     }
 
     /**
-     * Read just one member with parameter.
+     * <h3>Select Single data with Dynamically parameters</h3>
      */
     private static Member getMember(EntityManager em) {
         return em
@@ -81,7 +83,7 @@ public class jpaMain {
     }
 
     /**
-     * Read all members simply.
+     * <h3>Select List data</h3>
      */
     private static List<Member> getMembers(EntityManager em) {
         return em
@@ -90,7 +92,7 @@ public class jpaMain {
     }
 
     /**
-     * Read all members with domain DTO.
+     * <h3>Domain DTO</h3>
      */
     private static List<MemberDTO> getMembersWithDTO(EntityManager em) {
         return em.createQuery("select new jpql.domain.MemberDTO(m.username, m.age) from Member m", MemberDTO.class)
@@ -98,7 +100,7 @@ public class jpaMain {
     }
 
     /**
-     * Read all members with paging and sort.
+     * <h3>Paging & Sort</h3>
      */
     private static List<Member> getMembersWithPaging(EntityManager em) {
         return em.createQuery("select m from Member m order by m.age ", Member.class)
@@ -108,7 +110,7 @@ public class jpaMain {
     }
 
     /**
-     * Read all members with joins.
+     * <h3>Joins</h3>
      * <p>1. Inner join.</p>
      * <p>2. Outer join.</p>
      * <p>3. Theta join.</p>
@@ -138,7 +140,7 @@ public class jpaMain {
     }
 
     /**
-     * Read all members with sub-query.
+     * <h3>Sub query</h3>
      */
     private static List<Member> getMembersWithSubQuery(EntityManager em) {
         // note. Sub query;
@@ -153,7 +155,7 @@ public class jpaMain {
     }
 
     /**
-     * Read all members with variety types.
+     * <h3>Types</h3>
      * <p>1. String.</p>
      * <p>2. Boolean.</p>
      * <p>3. Number. - 10L(Long) 10D(Double) 10F(Float)</p>
@@ -167,7 +169,7 @@ public class jpaMain {
     }
 
     /**
-     * Read all members with case.
+     * <h3>Conditional expression</h3>
      */
     private static List<String> getMembersWithConditions(EntityManager em) {
         String query =
@@ -198,7 +200,7 @@ public class jpaMain {
     }
 
     /**
-     * Read all members with Coalesce.
+     * <h3>Coalesce</h3>
      * <p>coalesce(param1, param2)</p>
      * <p>if first param1 is null, then return param2 as value.</p>
      */
@@ -213,7 +215,7 @@ public class jpaMain {
     }
 
     /**
-     * Read all members with null if.
+     * <h3>Nullif</h3>
      * <p>nullif(param1, param2)</p>
      * <p>if param1 is same with param2 then, return null value as result.</p>
      */
@@ -228,7 +230,7 @@ public class jpaMain {
     }
 
     /**
-     * Read all members with JPQL basic functions.
+     * <h3>SQL functions</h3>
      * <p>CONCAT.</p>
      * <p>SUBSTRING.</p>
      * <p>TRIM.</p>
@@ -264,7 +266,7 @@ public class jpaMain {
     }
 
     /**
-     * Read all members with User custom defined functions.
+     * <h3>Custom SQL function</h3>
      * <p>First, need jpql.dialect setting which database.</p>
      */
     private static void getMembersWithCustomFunction(EntityManager em) {
@@ -359,12 +361,15 @@ public class jpaMain {
      * <p>Using for optimize performance.</p>
      * <p>Getting data related to an entity or collection in one go.</p>
      * <p>Usage : join fetch</p>
+     * <p>Do not use alias in Fetch join.</p>
+     * <p>Do not use Fetch join on more than one collection.</p>
+     * <p>Not recommended use paging API when used fetch join with collection.</p>
      */
     private static void getMembersWithFetchJoin(EntityManager em) {
         /**
          * Not using fetch join.
          * Call query 3 times.
-         * N + 1 Issue.
+         * It raises the n + 1 issue.
          */
         String query = "select m from Member m ";
         List<Member> result = em.createQuery(query, Member.class)
@@ -426,15 +431,5 @@ public class jpaMain {
         }
 
         clearAndPrintLine(em, "Collection fetch join with distinct");
-
-    }
-
-
-    /**
-     * <h3>Custom methods.</h3>
-     */
-    private static void clearAndPrintLine (EntityManager em, String comment) {
-        em.clear();
-        System.out.println("\n======= END ======= " + comment + " ======= END =======\n");
     }
 }
