@@ -46,7 +46,7 @@ public class jpaMain {
             em.flush();
             em.clear();
 
-            getMember(em);
+//            getMember(em);
 //            List<Member> result = getMembers(em);
 //            List<MemberDTO> result = getMembersWithDTO(em);
 //            List<Member> result = getMembersWithPaging(em);
@@ -60,6 +60,7 @@ public class jpaMain {
 //            getMembersWithCustomFunction(em);
 //            getMembersWithPathExpression(em);
 //            getMembersWithFetchJoin(em);
+            namedQuery(em);
 
             tx.commit();
         } catch (Exception e) {
@@ -491,5 +492,21 @@ public class jpaMain {
         }
 
         clearAndPrintLine(em, "Collection fetch join with distinct");
+    }
+
+    private static void namedQuery(EntityManager em) {
+        Member member = new Member();
+        member.setUsername("member1");
+        em.persist(member);
+
+        List<Member> result = em.createNamedQuery("Member.findByUsername", Member.class)
+                .setParameter("username", "member1")
+                .getResultList();
+
+        for (Member m : result) {
+            System.out.println("m.getUsername() = " + m.getUsername());
+        }
+
+        clearAndPrintLine(em, "Named query");
     }
 }
