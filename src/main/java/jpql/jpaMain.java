@@ -28,23 +28,38 @@ public class jpaMain {
             team2.setTeamName("team2");
             em.persist(team2);
 
-            Member member = new Member();
-            member.setUsername("admin");
-            member.setTeam(team);
-            em.persist(member);
+            Member admin = new Member();
+            admin.setUsername("admin");
+            admin.setTeam(team);
+            admin.setAge(40);
+            em.persist(admin);
+
+            Member user = new Member();
+            user.setUsername("user");
+            user.setTeam(team2);
+            user.setAge(18);
+            em.persist(user);
+
+            Member member1 = new Member();
+            member1.setUsername("member1");
+            member1.setAge(20);
+            member1.setTeam(team);
+            em.persist(member1);
 
             Member member2 = new Member();
-            member2.setUsername("user");
+            member2.setUsername("member2");
+            member2.setAge(22);
             member2.setTeam(team2);
             em.persist(member2);
 
             Member member3 = new Member();
             member3.setUsername("member3");
             member3.setTeam(team);
+            member3.setAge(30);
             em.persist(member3);
 
-            em.flush();
-            em.clear();
+//            em.flush();
+//            em.clear();
 
 //            dynamicallyParameter(em);
 //            selectListData(em);
@@ -61,6 +76,7 @@ public class jpaMain {
 //            pathExpression(em);
 //            fetchJoin(em);
 //            namedQuery(em);
+            bulkCalculate(em);
 
             tx.commit();
         } catch (Exception e) {
@@ -532,5 +548,58 @@ public class jpaMain {
         }
 
         clearAndPrintLine(em, "Named query");
+    }
+
+    /**
+     * <h3>Bulk calculate</h3>
+     * <p>It's supports calculate Large amounts of data (update, delete).</p>
+     * <p>It's supports insert -> insert into .. select (only hibernate).</p>
+     * <p>Ignore all Persistence context.</p>
+     * <p>Tip 1 : Doing bulk calculation first.</p>
+     * <p>Tip 2 : Initialize Persistence context after bulk calculate.</p>
+     */
+    private static void bulkCalculate(EntityManager em) {
+        Member newMember = new Member();
+        newMember.setUsername("bulk");
+        newMember.setAge(24);
+        em.persist(newMember);
+
+        String query = "update Member m set m.age = 20";
+        int resultCount = em.createQuery(query)
+                .executeUpdate();
+
+        System.out.println("resultCount = " + resultCount);
+
+        /**
+         * Applied update in database.
+         * But non applied in persistence context.
+         * See below code results.
+         */
+        query = "select m from Member m";
+        List<Member> result = em.createQuery(query, Member.class).getResultList();
+        for (Member member : result) {
+            System.out.println("member.getUsername() = " + member.getUsername() + ", age = " + member.getAge());
+        }
+
+        Member foundMember = em.find(Member.class, newMember.getId());
+        System.out.println("foundMember = " + foundMember);
+
+        clearAndPrintLine(em, "Bulk calculate before persistence clear");
+
+        /**
+         * Entity manager is cleared.
+         */
+        result = em.createQuery(query, Member.class).getResultList();
+        for (Member member : result) {
+            System.out.println("member.getUsername() = " + member.getUsername() + ", age = " + member.getAge());
+        }
+
+        foundMember = em.find(Member.class, newMember.getId());
+        System.out.println("foundMember = " + foundMember);
+
+        clearAndPrintLine(em, "Bulk calculate after persistence clear");
+
+        // note. See Tip 2.
+//        em.clear();
     }
 }
