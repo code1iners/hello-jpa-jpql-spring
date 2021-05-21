@@ -6,6 +6,7 @@ import jpql.domain.MemberType;
 import jpql.domain.Team;
 
 import javax.persistence.*;
+import java.util.Collection;
 import java.util.List;
 
 public class jpaMain {
@@ -17,14 +18,28 @@ public class jpaMain {
         tx.begin();
 
         try {
+            Team team = new Team();
+            team.setTeamName("team1");
+            em.persist(team);
+
+            Team team2 = new Team();
+            team2.setTeamName("team2");
+            em.persist(team2);
 
             Member member = new Member();
-            member.setUsername("Admin");
+            member.setUsername("admin");
+            member.setTeam(team);
             em.persist(member);
 
             Member member2 = new Member();
-            member2.setUsername("User");
+            member2.setUsername("user");
+            member2.setTeam(team2);
             em.persist(member2);
+
+            Member member3 = new Member();
+            member3.setUsername("member3");
+            member3.setTeam(team);
+            em.persist(member3);
 
             em.flush();
             em.clear();
@@ -40,7 +55,8 @@ public class jpaMain {
 //            List<String> result = getMembersWithCoalesce(em);
 //            List<String> result = getMembersWithNullIf(em);
 //            getMembersWithBasicFunction(em);
-            getMembersWithCustomFunction(em);
+//            getMembersWithCustomFunction(em);
+            getMembersWithPathExpression(em);
 
             tx.commit();
         } catch (Exception e) {
@@ -201,7 +217,7 @@ public class jpaMain {
      * <p>if param1 is same with param2 then, return null value as result.</p>
      */
     private static List<String> getMembersWithNullIf(EntityManager em) {
-        String query = "select nullif(m.username, 'Admin') from Member m ";
+        String query = "select nullif(m.username, 'admin') from Member m ";
         List<String> result = em.createQuery(query, String.class).getResultList();
         for (String s : result) {
             System.out.println("s = " + s);
@@ -260,5 +276,87 @@ public class jpaMain {
         for (String s : result) {
             System.out.println("s = " + s);
         }
+    }
+
+    /**
+     * <h3>Path expressions.</h3>
+     * <p>1. Status field : A field for simply storing values.</p>
+     * <p>2. Single association field : A field for association with Entity (@ManyToOne @OneToOne).</p>
+     * <p>3. Collection association field : A field for association with Collection (@OneToMany @ManyToMany).</p>
+     * <br/>
+     * <h4>Example)</h4>
+     *     select m.username -> <b>Status field.</b><br/>
+     *       from Member m<br/>
+     *     join m.team t -> <b>Single association field.</b><br/>
+     *     join m.orders o -> <b>Collection association field.</b><br/>
+     *     where t.name = 'team1'<br/>
+     */
+    private static void getMembersWithPathExpression(EntityManager em) {
+        /**
+         * <h2>Status field.</h2>
+         */
+        String query = "select m.username from Member m";
+
+        TypedQuery<String> statusFieldQuery = em.createQuery(query, String.class);
+        List<String> statusFieldResult = statusFieldQuery.getResultList();
+
+        for (String username : statusFieldResult) {
+            System.out.println("username = " + username);
+        }
+
+        clearAndPrintLine(em, "Status field");
+
+        /**
+         * Single association field.
+         * 1. Include implied join query.
+         * 2. Recommended what write explicit join query.
+         */
+        query = "select m.team.teamName from Member m";
+
+        TypedQuery<String> teamNameQuery = em.createQuery(query, String.class);
+        List<String> teamNameResult = teamNameQuery.getResultList();
+
+        for (String teamName : teamNameResult) {
+            System.out.println("teamName = " + teamName);
+        }
+
+        clearAndPrintLine(em, "Single association field");
+
+        /**
+         * Collection association field.
+         * 1. Include implied join query.
+         * 2. Recommended what write explicit join query.
+         */
+        query = "select t.members from Team t";
+
+        TypedQuery<Collection> teamQuery = em.createQuery(query, Collection.class);
+        List<Collection> teamResult = teamQuery.getResultList();
+
+        for (Object team : teamResult) {
+            System.out.println("team = " + team);
+        }
+
+        clearAndPrintLine(em, "Collection association field with Implied join query");
+
+        /**
+         * Collection association field with Explicit join query.
+         */
+         query = "select m.username from Team t join t.members m";
+        TypedQuery<String> explicitQuery = em.createQuery(query, String.class);
+        List<String> explicitResult = explicitQuery.getResultList();
+
+        for (String username : explicitResult) {
+            System.out.println("username = " + username);
+        }
+
+        clearAndPrintLine(em, "Collection association field with Explicit join query");
+    }
+
+    /**
+     * <h3>Custom methods.</h3>
+     */
+    private static void clearAndPrintLine (EntityManager em, String comment) {
+        em.clear();
+        System.out.println("\n======= END ======= " + comment + " ======= END =======\n");
     }
 }
