@@ -46,7 +46,7 @@ public class jpaMain {
             em.flush();
             em.clear();
 
-//            Member result = getMember(em);
+            getMember(em);
 //            List<Member> result = getMembers(em);
 //            List<MemberDTO> result = getMembersWithDTO(em);
 //            List<Member> result = getMembersWithPaging(em);
@@ -59,7 +59,7 @@ public class jpaMain {
 //            getMembersWithBasicFunction(em);
 //            getMembersWithCustomFunction(em);
 //            getMembersWithPathExpression(em);
-            getMembersWithFetchJoin(em);
+//            getMembersWithFetchJoin(em);
 
             tx.commit();
         } catch (Exception e) {
@@ -75,11 +75,71 @@ public class jpaMain {
     /**
      * <h3>Select Single data with Dynamically parameters</h3>
      */
-    private static Member getMember(EntityManager em) {
-        return em
-                .createQuery("select m from Member m where m.username = :username", Member.class)
+    private static void getMember(EntityManager em) {
+        Team newTeam = new Team();
+        newTeam.setTeamName("team1");
+        em.persist(newTeam);
+
+        Member newMember = new Member();
+        newMember.setUsername("member1");
+        newMember.setTeam(newTeam);
+        em.persist(newMember);
+
+        String query = "select m from Member m where m.username = :username";
+        Member result = em.createQuery(query, Member.class)
                 .setParameter("username", "member1")
                 .getSingleResult();
+
+        System.out.println("result = " + result);
+
+        clearAndPrintLine(em, "Dynamically parameter");
+
+        /**
+         * if use entity directly. then, using pk of entity.
+         */
+        query = "select m from Member m where m = :member";
+        Member result2 = em.createQuery(query, Member.class)
+                .setParameter("member", newMember)
+                .getSingleResult();
+
+        System.out.println("result2 = " + result2);
+
+        clearAndPrintLine(em, "Used entity directly");
+
+        /**
+         * If use entity pk then, same above result.
+         */
+        query = "select m from Member m where m.id = :memberId";
+        result2 = em.createQuery(query, Member.class)
+                .setParameter("memberId", newMember.getId())
+                .getSingleResult();
+
+        System.out.println("result2 = " + result2);
+
+        clearAndPrintLine(em, "Used entity's pk");
+
+        /**
+         * If use entity fk.
+         */
+        query = "select m from Member m where m.team = :team";
+        List result3 = em.createQuery(query)
+                .setParameter("team", newTeam)
+                .getResultList();
+
+        for (Object o : result3) {
+            System.out.println("o = " + o);
+        }
+        clearAndPrintLine(em, "Used fk entity directly");
+
+        query = "select m from Member m where m.team.id = :teamId";
+        result3 = em.createQuery(query)
+                .setParameter("teamId", newTeam.getId())
+                .getResultList();
+
+        for (Object o : result3) {
+            System.out.println("o = " + o);
+        }
+        clearAndPrintLine(em, "Used fk entity's id");
     }
 
     /**
