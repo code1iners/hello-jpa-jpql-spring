@@ -46,21 +46,21 @@ public class jpaMain {
             em.flush();
             em.clear();
 
-//            getMember(em);
-//            List<Member> result = getMembers(em);
-//            List<MemberDTO> result = getMembersWithDTO(em);
-//            List<Member> result = getMembersWithPaging(em);
-//            List<Member> result = getMembersWithJoins(em);
-//            List<Member> result = getMembersWithSubQuery(em);
-//            List<Object[]> result = getMembersWithTypes(em);
-//            List<String> result = getMembersWithConditions(em);
-//            List<String> result = getMembersWithCoalesce(em);
-//            List<String> result = getMembersWithNullIf(em);
-//            getMembersWithBasicFunction(em);
-//            getMembersWithCustomFunction(em);
-//            getMembersWithPathExpression(em);
-//            getMembersWithFetchJoin(em);
-            namedQuery(em);
+//            dynamicallyParameter(em);
+//            selectListData(em);
+//            domainDto(em);
+//            pagingAndSort(em);
+//            joins(em);
+//            subQuery(em);
+//            types(em);
+//            conditionalExpression(em);
+//            coalesce(em);
+//            nullIf(em);
+//            SQLFunctions(em);
+//            customSQLFunction(em);
+//            pathExpression(em);
+//            fetchJoin(em);
+//            namedQuery(em);
 
             tx.commit();
         } catch (Exception e) {
@@ -76,7 +76,7 @@ public class jpaMain {
     /**
      * <h3>Select Single data with Dynamically parameters</h3>
      */
-    private static void getMember(EntityManager em) {
+    private static void dynamicallyParameter(EntityManager em) {
         Team newTeam = new Team();
         newTeam.setTeamName("team1");
         em.persist(newTeam);
@@ -146,28 +146,40 @@ public class jpaMain {
     /**
      * <h3>Select List data</h3>
      */
-    private static List<Member> getMembers(EntityManager em) {
-        return em
+    private static void selectListData(EntityManager em) {
+        List<Member> result = em
                 .createQuery("select m from Member m", Member.class)
                 .getResultList();
+
+        for (Member member : result) {
+            System.out.println("member = " + member.getUsername());
+        }
     }
 
     /**
      * <h3>Domain DTO</h3>
      */
-    private static List<MemberDTO> getMembersWithDTO(EntityManager em) {
-        return em.createQuery("select new jpql.domain.MemberDTO(m.username, m.age) from Member m", MemberDTO.class)
+    private static void domainDto(EntityManager em) {
+        List<MemberDTO> result = em.createQuery("select new jpql.domain.MemberDTO(m.username, m.age) from Member m", MemberDTO.class)
                 .getResultList();
+
+        for (MemberDTO memberDTO : result) {
+            System.out.println("memberDTO = " + memberDTO.getUsername());
+        }
     }
 
     /**
      * <h3>Paging & Sort</h3>
      */
-    private static List<Member> getMembersWithPaging(EntityManager em) {
-        return em.createQuery("select m from Member m order by m.age ", Member.class)
+    private static void pagingAndSort(EntityManager em) {
+        List<Member> result = em.createQuery("select m from Member m order by m.age ", Member.class)
                 .setFirstResult(1)
                 .setMaxResults(10)
                 .getResultList();
+
+        for (Member member : result) {
+            System.out.println("member.getUsername() = " + member.getUsername());
+        }
     }
 
     /**
@@ -177,7 +189,7 @@ public class jpaMain {
      * <p>3. Theta join.</p>
      * <p>3. Relational/Non Relational join.</p>
      */
-    private static List<Member> getMembersWithJoins(EntityManager em) {
+    private static void joins(EntityManager em) {
         // note. Inner join.
         String query = "select m from Member m inner join m.team t";
 
@@ -197,22 +209,36 @@ public class jpaMain {
                 .getResultList();
 
         System.out.println("size: " + result.size());
-        return result;
+        for (Member member : result) {
+            System.out.println("member = " + member.getUsername());
+        }
     }
 
     /**
      * <h3>Sub query</h3>
      */
-    private static List<Member> getMembersWithSubQuery(EntityManager em) {
+    private static void subQuery(EntityManager em) {
         // note. Sub query;
-        String subQuery = "select m from Member m where m.age > (select avg(m2.age) from Member m2)";
+        String query = "select m from Member m where m.age > (select avg(m2.age) from Member m2)";
+
+        List<Member> result = em.createQuery(query, Member.class)
+                .getResultList();
+
+        for (Member member : result) {
+            System.out.println("member.getUsername() = " + member.getUsername());
+        }
+        clearAndPrintLine(em, "Sub query");
 
         // note. Scalar query
-        subQuery = "select (select avg(m2.age) from Member m2) from Member m";
+        query = "select (select avg(m2.age) from Member m2) from Member m";
+        List<Double> result2 = em.createQuery(query, Double.class)
+                .getResultList();
 
-        TypedQuery<Member> query = em.createQuery(subQuery, Member.class);
+        for (Double avg : result2) {
+            System.out.println("avg = " + avg);
+        }
+        clearAndPrintLine(em, "Scalar query");
 
-        return query.getResultList();
     }
 
     /**
@@ -221,18 +247,22 @@ public class jpaMain {
      * <p>2. Boolean.</p>
      * <p>3. Number. - 10L(Long) 10D(Double) 10F(Float)</p>
      */
-    private static List<Object[]> getMembersWithTypes(EntityManager em) {
+    private static void types(EntityManager em) {
         String query = "select m.username, 'HELLO', TRUE from Member m ";
         query += "where m.type = :userType";
-        Query resultQuery = em.createQuery(query)
-                .setParameter("userType", MemberType.ADMIN);
-        return resultQuery.getResultList();
+        List result = em.createQuery(query)
+                .setParameter("userType", MemberType.ADMIN)
+                .getResultList();
+
+        for (Object o : result) {
+            System.out.println("o = " + o);
+        }
     }
 
     /**
      * <h3>Conditional expression</h3>
      */
-    private static List<String> getMembersWithConditions(EntityManager em) {
+    private static void conditionalExpression(EntityManager em) {
         String query =
                 "select " +
                         "  case when m.age <= 10 then 'Student fare' " +
@@ -256,8 +286,6 @@ public class jpaMain {
         for (String item : result) {
             System.out.println("item = " + item);
         }
-
-        return result;
     }
 
     /**
@@ -265,14 +293,12 @@ public class jpaMain {
      * <p>coalesce(param1, param2)</p>
      * <p>if first param1 is null, then return param2 as value.</p>
      */
-    private static List<String> getMembersWithCoalesce(EntityManager em) {
+    private static void coalesce(EntityManager em) {
         String query = "select coalesce(m.username, 'Unknown user') from Member m ";
         List<String> result = em.createQuery(query, String.class).getResultList();
         for (String s : result) {
             System.out.println("s = " + s);
         }
-
-        return result;
     }
 
     /**
@@ -280,14 +306,12 @@ public class jpaMain {
      * <p>nullif(param1, param2)</p>
      * <p>if param1 is same with param2 then, return null value as result.</p>
      */
-    private static List<String> getMembersWithNullIf(EntityManager em) {
+    private static void nullIf(EntityManager em) {
         String query = "select nullif(m.username, 'admin') from Member m ";
         List<String> result = em.createQuery(query, String.class).getResultList();
         for (String s : result) {
             System.out.println("s = " + s);
         }
-
-        return result;
     }
 
     /**
@@ -301,7 +325,7 @@ public class jpaMain {
      * <p>ABS, SQRT, MOD.</p>
      * <p>SIZE, INDEX(for JPA).</p>
      */
-    private static void getMembersWithBasicFunction(EntityManager em) {
+    private static void SQLFunctions(EntityManager em) {
         // note. Concat. (return type String)
         String query = "select concat('a', 'b') from Member m ";
 //        query = "select 'a' || 'b' from Member m "; // note. Same concat('a', 'b')
@@ -330,7 +354,7 @@ public class jpaMain {
      * <h3>Custom SQL function</h3>
      * <p>First, need jpql.dialect setting which database.</p>
      */
-    private static void getMembersWithCustomFunction(EntityManager em) {
+    private static void customSQLFunction(EntityManager em) {
         // note. Usage user custom defined function.
         String query = "select function('group_concat', m.username) from Member m ";
 //        query = "select group_concat(m.username) from Member m"; // note. Same above query.
@@ -355,7 +379,7 @@ public class jpaMain {
      *     join m.orders o -> <b>Collection association field.</b><br/>
      *     where t.name = 'team1'<br/>
      */
-    private static void getMembersWithPathExpression(EntityManager em) {
+    private static void pathExpression(EntityManager em) {
         /**
          * <h2>Status field.</h2>
          */
@@ -426,7 +450,7 @@ public class jpaMain {
      * <p>Do not use Fetch join on more than one collection.</p>
      * <p>Not recommended use paging API when used fetch join with collection.</p>
      */
-    private static void getMembersWithFetchJoin(EntityManager em) {
+    private static void fetchJoin(EntityManager em) {
         /**
          * Not using fetch join.
          * Call query 3 times.
