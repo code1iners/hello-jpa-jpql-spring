@@ -56,7 +56,8 @@ public class jpaMain {
 //            List<String> result = getMembersWithNullIf(em);
 //            getMembersWithBasicFunction(em);
 //            getMembersWithCustomFunction(em);
-            getMembersWithPathExpression(em);
+//            getMembersWithPathExpression(em);
+            getMembersWithFetchJoin(em);
 
             tx.commit();
         } catch (Exception e) {
@@ -351,6 +352,83 @@ public class jpaMain {
 
         clearAndPrintLine(em, "Collection association field with Explicit join query");
     }
+
+    /**
+     * <h3>Fetch join</h3>
+     * <p>This is not a SQL join.</p>
+     * <p>Using for optimize performance.</p>
+     * <p>Getting data related to an entity or collection in one go.</p>
+     * <p>Usage : join fetch</p>
+     */
+    private static void getMembersWithFetchJoin(EntityManager em) {
+        /**
+         * Not using fetch join.
+         * Call query 3 times.
+         * N + 1 Issue.
+         */
+        String query = "select m from Member m ";
+        List<Member> result = em.createQuery(query, Member.class)
+                .getResultList();
+
+        for (Member member : result) {
+            System.out.println("member = " + member.getUsername() + ", " + member.getTeam().getTeamName());
+        }
+
+        clearAndPrintLine(em, "Not using fetch join");
+
+        /**
+         * Using fetch join.
+         * Call query 1 time.
+         * Recommended way.
+         */
+        query = "select m from Member m join fetch m.team";
+        result = em.createQuery(query, Member.class)
+                .getResultList();
+
+        for (Member member : result) {
+            System.out.println("member = " + member.getUsername() + ", " + member.getTeam().getTeamName());
+        }
+
+        clearAndPrintLine(em, "Using fecth join");
+
+        /**
+         * Collection fetch join.
+         * There may be duplicate data.
+         */
+        query = "select t from Team t join fetch t.members";
+        List<Team> teamResult = em.createQuery(query, Team.class).getResultList();
+
+        System.out.println("teamResult = " + teamResult.size());
+        for (Team team : teamResult) {
+            System.out.println("team = " + team.getTeamName() + ", members size = " + team.getMembers().size());
+            for (Member member : team.getMembers()) {
+                System.out.println("member = " + member.getUsername() + ", " + member.getTeam().getTeamName());
+            }
+        }
+
+        clearAndPrintLine(em, "Collection fetch join");
+
+        /**
+         * Collection fetch join with distinct.
+         * Removed which duplicate data in SQL.
+         * Removed which duplicate data in Application entity.
+         */
+        query = "select distinct t from Team t join fetch t.members";
+        teamResult = em.createQuery(query, Team.class)
+                .getResultList();
+
+        System.out.println("teamResult = " + teamResult.size());
+        for (Team team : teamResult) {
+            System.out.println("team = " + team.getTeamName() + ", members size = " + team.getMembers().size());
+            for (Member member : team.getMembers()) {
+                System.out.println("member = " + member.getUsername() + ", " + member.getTeam().getTeamName());
+            }
+        }
+
+        clearAndPrintLine(em, "Collection fetch join with distinct");
+
+    }
+
 
     /**
      * <h3>Custom methods.</h3>
